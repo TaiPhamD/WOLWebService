@@ -23,7 +23,8 @@ func (h turnonHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
        if packet, err := gowol.NewMagicPacket(MyMAC); err == nil {
-                packet.Send("192.168.255.255")          // send to broadcast
+		fmt.Println("Sending WOL magic packet")
+                packet.Send("192.168.2.255")          // send to broadcast
                 // specify receiving port
         }
 }
@@ -44,7 +45,8 @@ func main() {
 	file.Close()
 
 	fmt.Println("My password is:",Mypassword)
-
+	fmt.Println("My port: ",MyPort)
+	fmt.Println("My MAC is: ",MyMAC)
         err = http.ListenAndServe(":"+MyPort, turnonHandler{})
 
 }
