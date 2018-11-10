@@ -1,3 +1,4 @@
 Mypassword1
 9998
 XX:XX:XX:XX:XX:XX
+//Rename this file to config.txt
