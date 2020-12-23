@@ -3,12 +3,13 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+
+	"github.com/linde12/gowol"
 )
-import "github.com/linde12/gowol"
 
 //import "strings"
 
@@ -37,15 +38,31 @@ func (h turnonHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if packet, err := gowol.NewMagicPacket(MyMAC); err == nil {
-		fmt.Println("Sending WOL magic packet")
+		log.Print("Sending WOL magic packet")
 		packet.Send("192.168.2.255") // send to broadcast
 		// specify receiving port
 	}
 }
 
 func main() {
+	//Get file path from where the exe is launched
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Print(dir)
 
-	file, err := os.Open("config.txt")
+	//set up log file
+	filelog, errlog := os.OpenFile(dir+"/info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if errlog != nil {
+		log.Fatal(errlog)
+	}
+
+	defer filelog.Close()
+
+	log.SetOutput(filelog)
+
+	file, err := os.Open(dir + "/config.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,9 +75,9 @@ func main() {
 	MyMAC = scanner.Text()
 	file.Close()
 
-	fmt.Println("My password is:", Mypassword)
-	fmt.Println("My port: ", MyPort)
-	fmt.Println("My MAC is: ", MyMAC)
+	log.Print("My password is:", Mypassword)
+	log.Print("My port: ", MyPort)
+	log.Print("My MAC is: ", MyMAC)
 	err = http.ListenAndServe(":"+MyPort, turnonHandler{})
 
 }
