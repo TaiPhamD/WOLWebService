@@ -36,6 +36,13 @@ You do not need to install this software on the WoL targeted system unless you w
         "os": "ubuntu"
 }
 ```
+- POST /api/suspend   - This API suspends the client PC 
+```
+{
+	"api_key": "4235sdfadf",
+	"alias": "pc1"
+}
+```
 ## Automation
 
 Once you have the server setup you can easily send HTTPS payload to your server using any of the following:
