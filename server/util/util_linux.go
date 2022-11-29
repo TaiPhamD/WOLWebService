@@ -13,6 +13,8 @@ func Suspend(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusOK)
 	// write "System is suspending" to w
 	w.Write([]byte("System is suspending"))
+	// flush w
+	w.(http.Flusher).Flush()
 
 	cmd := exec.Command("systemctl", "suspend")
 	_, err := cmd.Output()
