@@ -121,6 +121,7 @@ Slave config
 # Build from source
 ## Linux
 ### Prerequisite
+- Linux distro with systemd support. If you don't have it then you just have to modify the installation script yourself and edit 1 line for the suspend code [here](https://github.com/TaiPhamD/WOLWebService/blob/8137ca66b9ac6d4dea3cd1b5e4d359f3b6c33a92/server/util/util_linux.go#L12) to not rely on systemctl.
 - Go lang compiler 
 ### Build step
 - ./build_unix.sh
