@@ -1,0 +1,8 @@
+GOPATH="/ssd1/go"
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/ssd1/go/bin"
+RENEW_PATH="/ssd1/apps/.lego"
+DUCKDNS_TOKEN="xxxxxxxxxxx"
+EMAIL="xxxxxx@gmail.com"
+DOMAIN="xxxxxx.duckdns.org"
+HOOK="/ssd1/apps/restart_wol.sh"
+ARGS="--dns duckdns"

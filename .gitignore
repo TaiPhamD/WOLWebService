@@ -1,0 +1,6 @@
+config.json
+*.exe
+wolservice
+logs
+build
+.vscode

@@ -1,0 +1,11 @@
+[Unit]
+Description=Lets Encrypt client and ACME library written in Go
+
+[Service]
+EnvironmentFile=/ssd1/apps/wol_cert_config
+WorkingDirectory=/ssd1/apps
+ExecStart=/ssd1/go/bin/lego --path ${RENEW_PATH} -m ${EMAIL} -d ${DOMAIN} $ARGS renew --renew-hook ${HOOK}
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target

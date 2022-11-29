@@ -1,0 +1,11 @@
+[Unit]
+Description=Duck DNS Updater
+
+[Service]
+Environment=HOME=/ssd1/apps
+Type=simple
+ExecStart=/ssd1/apps/duckdns-systemd/duckdns
+WorkingDirectory=/ssd1/apps
+
+[Install]
+WantedBy=default.target

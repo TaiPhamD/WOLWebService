@@ -1,0 +1,13 @@
+[Unit]
+Description=Wake-on-LAN web service
+After=network.target
+
+[Service]
+ExecStart=/opt/wolservice/wolwebservice
+WorkingDirectory=/opt/wolservice/
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

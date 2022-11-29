@@ -1,0 +1,16 @@
+[Unit]
+Description=Renew certificates
+
+[Timer]
+Persistent=true
+# avoid:
+#OnCalendar=*-*-* 00:00:00
+#OnCalendar=daily
+
+# instead, use a randomly chosen time:
+OnCalendar=*-*-* 3:35
+# add extra delay, here up to 1 hour:
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target
