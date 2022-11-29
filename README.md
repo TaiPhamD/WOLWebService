@@ -9,7 +9,7 @@ This is a webservice that runs in 2 modes:
 
 A typical use case would be to install this server app on an always on device like a raspberry pi then set it up in Master mode. Then configure config.json to include information about all your LAN devices that you want to be able to send WoL packets, restart command, or query OS info.
 
-You do not need to install this software on the WoL targeted system unless you want to support other APIs like restart to a certain OS for multi-boot system or to query OS info. 
+You do not need to install this software on the WoL targeted system unless you want to support other APIs like suspend or restarting to a different OS.
 
 
 
