@@ -33,6 +33,8 @@ func Setup() (config.Config, *http.ServeMux, error) {
 	}
 	// handle Restart requests
 	mux.HandleFunc("/api/restart", RestartHandler)
+	// handle Suspend requests
+	mux.HandleFunc("/api/suspend", SuspendHandler)
 	// handle OS query requests
 	mux.HandleFunc("/api/os", OSQueryHandler)
 
