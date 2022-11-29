@@ -6,6 +6,24 @@ import (
 	"os/exec"
 )
 
+func Suspend(w http.ResponseWriter) error {
+	// call DLL to set system to suspend
+
+	// write status ok to w
+	w.WriteHeader(http.StatusOK)
+	// write "System is suspending" to w
+	w.Write([]byte("System is suspending"))
+
+	cmd := exec.Command("systemctl", "suspend")
+	_, err := cmd.Output()
+	if err != nil {
+		log.Println("Error executing suspend command: ", err)
+		return err
+	}
+
+	return nil
+}
+
 func Reboot(bootnext string, w http.ResponseWriter) error {
 	// call shell command to execute "efibootmgr --bootnext 0000" command
 	cmd := exec.Command("efibootmgr", "--bootnext", bootnext)

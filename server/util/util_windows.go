@@ -8,6 +8,21 @@ import (
 	"unsafe"
 )
 
+func Suspend(w http.ResponseWriter) error {
+	// call DLL to set system to suspend
+	// write status ok to w
+	w.WriteHeader(http.StatusOK)
+	// write "System is suspending" to w
+	w.Write([]byte("System is suspending"))
+
+	loaddll := syscall.MustLoadDLL("efiDLL")
+	//defer loaddll.Release()
+	ChangeBootFunc := loaddll.MustFindProc("SystemSuspend")
+	ChangeBootFunc.Call()
+
+	return nil
+}
+
 func Reboot(bootnext string, w http.ResponseWriter) error {
 	// call DLL to change boot NEXT
 

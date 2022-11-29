@@ -2,6 +2,7 @@
 // code adopted from: https://serverfault.com/questions/813695/how-do-i-stop-windows-10-install-from-modifying-bios-boot-settings
 
 #include <windows.h>
+#include <powrprof.h>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -76,7 +77,16 @@ void changeBoot(uint16_t *data, uint16_t *mode)
 
 extern "C"
 {
-  /**Shutdown function**/  
+
+  /**Suspend function**/  
+  __declspec(dllexport) bool SystemSuspend()
+  {
+    SetPrivilege(GetCurrentProcess(), SE_SHUTDOWN_NAME, TRUE);
+    SetSuspendState(FALSE, FALSE, FALSE);
+    return true;
+  }
+  
+  /**Shutdown/restart function**/  
   __declspec(dllexport) bool SystemShutdown(uint16_t *mode)
   {
     //MODE 1 - shutdown 0 - restart

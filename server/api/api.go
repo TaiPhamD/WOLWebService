@@ -220,6 +220,21 @@ func RestartHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func SuspendHandler(w http.ResponseWriter, r *http.Request) {
+	params, err := GetAuthParams(r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400 - Bad Request"))
+		return
+	}
+	if !MyConfig.Master {
+		util.Suspend(w)
+	} else {
+		log.Println("Forwarding Suspend request for: ", params.Alias)
+		forwardRequest(w, r, params)
+	}
+}
+
 func OSQueryHandler(w http.ResponseWriter, r *http.Request) {
 	params, err := GetAuthParams(r)
 	if err != nil {
