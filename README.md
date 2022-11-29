@@ -11,6 +11,8 @@ A typical use case would be to install this server app on an always on device li
 
 You do not need to install this software on the WoL targeted system unless you want to support other APIs like restart to a certain OS for multi-boot system or to query OS info. 
 
+
+
 ## API
 - POST /api/wol   - This API sends a Wake-On-Lan packet to your client PC defined by the alias param. Only available in Master mode.
 ```
@@ -37,6 +39,7 @@ You do not need to install this software on the WoL targeted system unless you w
 
 ## Config file explanation
 
+Master config
 ```
 {
     "port": "9991", <--- Listening port of web appp server
@@ -53,6 +56,43 @@ You do not need to install this software on the WoL targeted system unless you w
             "alias": "client2",
             "ip": "192.168.0.27",
             "mac": "aa:aa:aa:aa:aa:aa" 
+        }
+    ]
+}
+```
+
+The slave config is almost like the master config except the ip/mac information isn't needed. If you are using the restart to specific OS then you will need to model OS information including the boot_id which is obtained via any standadard UEFI boot manager like efibootmgr on linux.
+
+
+Slave config
+```
+{
+    "master": false,
+    "tls": false,
+    "port": "9991", <---listening port must match master system port
+    "api_key": "my_secret_key",
+    "clients:": [
+        {
+            "alias": "client1",
+            "os": [
+                {
+                    "name": "Windows",
+                    "boot_id": "0000" <-- UEFI boot id could be obtained from efibootmgr (linux app)
+                },
+                {
+                    "name": "ubuntu",
+                    "boot_id": "0002"
+                }
+            ]
+        },
+        {
+            "alias": "client2",
+            "os": [
+                {
+                    "name": "Windows",
+                    "boot_id": "0001"
+                }
+            ]
         }
     ]
 }
