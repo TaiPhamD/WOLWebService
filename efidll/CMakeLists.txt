@@ -5,6 +5,8 @@ FILE(GLOB MySources ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 # Create a target for the library
 ADD_LIBRARY(efiDLL SHARED ${MySources} ${MyHeaders})
 target_compile_definitions(efiDLL PRIVATE _WIN32_WINNT=0x0A00 WINVER=0x0A00)
+
+target_link_libraries(efiDLL powrprof)
 target_link_options(efiDLL PRIVATE -static)
 set_target_properties(efiDLL 
                     PROPERTIES PREFIX ""

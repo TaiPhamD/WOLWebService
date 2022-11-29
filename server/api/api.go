@@ -33,6 +33,8 @@ func Setup() (config.Config, *http.ServeMux, error) {
 	}
 	// handle Restart requests
 	mux.HandleFunc("/api/restart", RestartHandler)
+	// handle Suspend requests
+	mux.HandleFunc("/api/suspend", SuspendHandler)
 	// handle OS query requests
 	mux.HandleFunc("/api/os", OSQueryHandler)
 
@@ -216,6 +218,21 @@ func RestartHandler(w http.ResponseWriter, r *http.Request) {
 		reboot(w, params)
 	} else {
 		log.Println("Forwarding Restart request for: ", params.Alias)
+		forwardRequest(w, r, params)
+	}
+}
+
+func SuspendHandler(w http.ResponseWriter, r *http.Request) {
+	params, err := GetAuthParams(r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("400 - Bad Request"))
+		return
+	}
+	if !MyConfig.Master {
+		util.Suspend(w)
+	} else {
+		log.Println("Forwarding Suspend request for: ", params.Alias)
 		forwardRequest(w, r, params)
 	}
 }

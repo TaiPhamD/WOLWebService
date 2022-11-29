@@ -5,8 +5,26 @@ import (
 	"net/http"
 	"strconv"
 	"syscall"
+	"time"
 	"unsafe"
 )
+
+func delaySuspend(n time.Duration) {
+	time.Sleep(n * time.Second)
+	loaddll := syscall.MustLoadDLL("efiDLL")
+	//defer loaddll.Release()
+	SystemSuspendFunc := loaddll.MustFindProc("SystemSuspend")
+	SystemSuspendFunc.Call()
+}
+
+func Suspend(w http.ResponseWriter) error {
+	// call DLL to set system to suspend
+	// write status ok to w
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("System is suspending"))
+	go delaySuspend(3)
+	return nil
+}
 
 func Reboot(bootnext string, w http.ResponseWriter) error {
 	// call DLL to change boot NEXT
