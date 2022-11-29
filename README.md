@@ -36,6 +36,19 @@ You do not need to install this software on the WoL targeted system unless you w
         "os": "ubuntu"
 }
 ```
+## Automation
+
+Once you have the server setup you can easily send HTTPS payload to your server using any of the following:
+- Google Assistant --> IFTTT --> your webserver
+- Siri Shortcuts --> your webserver
+    - Note: Siri Shortcuts won't allow you to connect to a self-signed HTTPS so you should get a real HTTPS cert for free via [LetsEncrypt](https://letsencrypt.org)
+    
+#### Example of Siri shortcut to send WoL payload    
+Here is an example of a sirit shortcut:
+
+<img width="713" alt="Screenshot 2022-11-28 at 6 46 23 PM" src="https://user-images.githubusercontent.com/10516699/204426683-538dd29b-d032-4128-a9a3-0e8bc9f00de6.png">
+
+
 
 ## Config file explanation
 
