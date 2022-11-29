@@ -106,9 +106,9 @@ Slave config
 - ./build_unix.sh
 ### Install step
 - ./install_linux.sh (It will install a systemd service named wolservice and start it but it wont work yet until you setup a config.json)
-- setup config.json based on the examples from [master config](https://github.com/TaiPhamD/WOLWebService/blob/master/server/config/config_master.json)
-or [slave config](https://github.com/TaiPhamD/WOLWebService/blob/master/server/config/config_slave.json)
-- copy config.json to /opt/wolservice/config/config.json
+- setup config.json based on the examples from [master config](https://github.com/TaiPhamD/WOLWebService/blob/master/server/config_sample_master.json)
+or [slave config](https://github.com/TaiPhamD/WOLWebService/blob/master/server/config_sample_slave.json)
+- copy config.json to /opt/wolservice/config.json
 - sudo systemctl restart wolservice
 ## Windows
 ### Prerequisite
@@ -123,5 +123,5 @@ or [slave config](https://github.com/TaiPhamD/WOLWebService/blob/master/server/c
 - ./install_windows.bat (It will install a Windows Service called WOLServerService
 - setup config.json based on the examples from [master config](https://github.com/TaiPhamD/WOLWebService/blob/master/server/config/config_master.json)
 or [slave config](https://github.com/TaiPhamD/WOLWebService/blob/master/server/config/config_slave.json)
-- copy config.json to C:\wolservice\config\config.json
+- copy config.json to C:\wolservice\config.json
 - Restart the WOLServerService from services.msc

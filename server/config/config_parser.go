@@ -3,7 +3,8 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
-	"runtime"
+	"os"
+	"path/filepath"
 )
 
 // The data struct to decode config.json
@@ -28,18 +29,17 @@ type Config struct {
 func ParseConfig() (Config, error) {
 
 	var result Config
-
-	// if OS is windows, use windows path
-	// if OS is linux, use linux path
 	var content []byte
-	var err error
-	os := runtime.GOOS
-	if os == "windows" {
-		content, err = ioutil.ReadFile("C:\\wolservice\\config\\config.json")
-	} else if os == "linux" {
-		content, err = ioutil.ReadFile("./config/config.json")
-	}
 
+	// get path of running executable
+	filename, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(filename)
+	// build file path as wd + '/config.json'
+	filePath := exPath + "/config.json"
+	content, err = ioutil.ReadFile(filePath)
 	if err != nil {
 		return Config{}, err
 	}
