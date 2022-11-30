@@ -9,7 +9,7 @@ This is a webservice that runs in 2 modes:
 
 A typical use case would be to install this server app on an always on device like a raspberry pi then set it up in Master mode. Then configure config.json to include information about all your LAN devices that you want to be able to send WoL packets, restart command, or query OS info.
 
-You do not need to install this software on the WoL targeted system unless you want to support other APIs like restart to a certain OS for multi-boot system or to query OS info. 
+You do not need to install this software on the WoL targeted system unless you want to support other APIs like suspend or restarting to a different OS.
 
 
 
@@ -121,6 +121,7 @@ Slave config
 # Build from source
 ## Linux
 ### Prerequisite
+- Linux distro with systemd support. If you don't have it then you just have to modify the installation script yourself and edit 1 line for the suspend code [here](https://github.com/TaiPhamD/WOLWebService/blob/8137ca66b9ac6d4dea3cd1b5e4d359f3b6c33a92/server/util/util_linux.go#L12) to not rely on systemctl.
 - Go lang compiler 
 ### Build step
 - ./build_unix.sh
