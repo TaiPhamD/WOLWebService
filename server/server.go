@@ -21,14 +21,15 @@ func (p *program) Start(s service.Service) error {
 	go p.run()
 	return nil
 }
+
 func (p *program) run() {
 	// First need to create certs for HTTPS via LetsEncrypt service and certbot
 	// sudo certbot certonly --standalone -d www.your_domain.com
 	// Cert bot will create a fullchain and a privateg key file
 	// So input these path in line 4 and 5 of config.txt
 	var err error
-	var mux *http.ServeMux
-	MyConfig, mux, err = api.Setup()
+	var handler http.Handler
+	MyConfig, handler, err = api.Setup()
 	if err != nil {
 		log.Fatal("Error parsing config file: ", err)
 	}
@@ -36,11 +37,11 @@ func (p *program) run() {
 
 	// check TLS mode
 	if !MyConfig.TLS {
-		err = http.ListenAndServe(":"+MyConfig.Port, mux)
+		err = http.ListenAndServe(":"+MyConfig.Port, handler)
 	} else {
 		log.Print("tls chain path: ", MyConfig.Fullchain)
 		log.Print("tls key path: ", MyConfig.PrivKey)
-		err = http.ListenAndServeTLS(":"+MyConfig.Port, MyConfig.Fullchain, MyConfig.PrivKey, mux)
+		err = http.ListenAndServeTLS(":"+MyConfig.Port, MyConfig.Fullchain, MyConfig.PrivKey, handler)
 	}
 	if err != nil {
 		log.Fatal("Error starting web server: ", err)

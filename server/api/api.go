@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +13,8 @@ import (
 	"strings"
 	"wolwebservice/config"
 	"wolwebservice/util"
+
+	"golang.org/x/time/rate"
 )
 
 type Params struct {
@@ -22,7 +25,35 @@ type Params struct {
 
 var MyConfig config.Config
 
-func Setup() (config.Config, *http.ServeMux, error) {
+var limiter = rate.NewLimiter(1, 1)
+
+func limit(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// check to make sure we havne't exceeded our rate limit
+		if !limiter.Allow() {
+			http.Error(w, http.StatusText(http.StatusTooManyRequests), http.StatusTooManyRequests)
+			return
+		}
+		// check password from request json
+		var params Params
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&params)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+		paramApiHash := sha256.Sum256([]byte(params.APIKey))
+
+		if !bytes.Equal(paramApiHash[:], MyConfig.APIKeyHash[:]) {
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		} else {
+			//forward params to http handler
+			next.ServeHTTP(w, r)
+		}
+	})
+}
+
+func Setup() (config.Config, http.Handler, error) {
 	var err error
 	// parse config
 	MyConfig, err = config.ParseConfig()
@@ -38,7 +69,9 @@ func Setup() (config.Config, *http.ServeMux, error) {
 	// handle OS query requests
 	mux.HandleFunc("/api/os", OSQueryHandler)
 
-	return MyConfig, mux, err
+	handler := limit(mux)
+
+	return MyConfig, handler, err
 	//setup endpoints
 }
 
@@ -183,7 +216,7 @@ func GetAuthParams(r *http.Request) (Params, error) {
 		return Params{}, err
 	}
 	if params.APIKey != MyConfig.APIKey {
-		return Params{}, errors.New("APIKey from JSON doesn't match")
+		return Params{}, errors.New("invalid api key")
 	}
 	return params, nil
 }
