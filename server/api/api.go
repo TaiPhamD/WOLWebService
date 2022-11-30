@@ -2,9 +2,9 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -25,31 +25,41 @@ type Params struct {
 
 var MyConfig config.Config
 
+type ctxWoLParam struct{}
+
 var limiter = rate.NewLimiter(1, 1)
 
+// define limit middleware that checks limiter and also check decoded Params password
 func limit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// check to make sure we havne't exceeded our rate limit
+		// check if request is allowed by limiter
 		if !limiter.Allow() {
-			http.Error(w, http.StatusText(http.StatusTooManyRequests), http.StatusTooManyRequests)
+			log.Println("Too many requests")
+			w.WriteHeader(http.StatusTooManyRequests)
+			w.Write([]byte("429 - Too Many Requests"))
 			return
 		}
-		// check password from request json
+		//check password
 		var params Params
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&params)
 		if err != nil {
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			log.Println("Error decoding JSON: ", err)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("400 - Bad Request"))
 			return
 		}
 		paramApiHash := sha256.Sum256([]byte(params.APIKey))
-
 		if !bytes.Equal(paramApiHash[:], MyConfig.APIKeyHash[:]) {
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		} else {
-			//forward params to http handler
-			next.ServeHTTP(w, r)
+			log.Println("API Key doesn't match")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("401 - Unauthorized"))
+			return
 		}
+		// add param to r context
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, ctxWoLParam{}, params)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -207,27 +217,10 @@ func reboot(w http.ResponseWriter, params Params) {
 	w.Write([]byte("Rebooting computer to: " + params.Os))
 }
 
-/** Get parameters from request and check api_key **/
-func GetAuthParams(r *http.Request) (Params, error) {
-	var params Params
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&params)
-	if err != nil {
-		return Params{}, err
-	}
-	if params.APIKey != MyConfig.APIKey {
-		return Params{}, errors.New("invalid api key")
-	}
-	return params, nil
-}
-
 func WoLHandler(w http.ResponseWriter, r *http.Request) {
-	params, err := GetAuthParams(r)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400 - Bad Request"))
-		return
-	}
+	// get params from context
+	params := r.Context().Value(ctxWoLParam{}).(Params)
+
 	log.Println("Received WoL request for: ", params.Alias)
 	if params.Alias != "" {
 		//no os specified, send wol
@@ -237,16 +230,11 @@ func WoLHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400 - Bad Request"))
 	}
-
 }
 
 func RestartHandler(w http.ResponseWriter, r *http.Request) {
-	params, err := GetAuthParams(r)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400 - Bad Request"))
-		return
-	}
+	// get params from context
+	params := r.Context().Value(ctxWoLParam{}).(Params)
 	if !MyConfig.Master {
 		reboot(w, params)
 	} else {
@@ -256,12 +244,8 @@ func RestartHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SuspendHandler(w http.ResponseWriter, r *http.Request) {
-	params, err := GetAuthParams(r)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400 - Bad Request"))
-		return
-	}
+	// get params from context
+	params := r.Context().Value(ctxWoLParam{}).(Params)
 	if !MyConfig.Master {
 		util.Suspend(w)
 	} else {
@@ -271,12 +255,8 @@ func SuspendHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func OSQueryHandler(w http.ResponseWriter, r *http.Request) {
-	params, err := GetAuthParams(r)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400 - Bad Request"))
-		return
-	}
+	// get params from context
+	params := r.Context().Value(ctxWoLParam{}).(Params)
 	if !MyConfig.Master {
 		// If slave then process request
 		w.WriteHeader(http.StatusOK)
