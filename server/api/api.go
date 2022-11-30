@@ -29,8 +29,8 @@ type ctxWoLParam struct{}
 
 var limiter = rate.NewLimiter(1, 1)
 
-// define limit middleware that checks limiter and also check decoded Params password
-func LimitAndAuth(next http.Handler) http.Handler {
+// define limit middleware that checks limiter
+func Limit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// check if request is allowed by limiter
 		if !limiter.Allow() {
@@ -40,6 +40,14 @@ func LimitAndAuth(next http.Handler) http.Handler {
 			w.Write([]byte("429 - Too Many Requests"))
 			return
 		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// auth middleware to check api key
+func Auth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//check password
 		var params Params
 		decoder := json.NewDecoder(r.Body)
@@ -80,18 +88,16 @@ func Setup() (config.Config, http.Handler, error) {
 	// handle OS query requests
 	mux.HandleFunc("/api/os", OSQueryHandler)
 
-	// handle all requests through LimitAndAuth middleware
-	handler := LimitAndAuth(mux)
-
+	// handle all requests through Limit and Auth middleware
+	handler := Limit(Auth(mux))
 	return MyConfig, handler, err
-	//setup endpoints
 }
 
 func getSlaveIP(alias string) string {
 	var slaveIp string
 	slaveIp = ""
 	for _, client := range MyConfig.Clients {
-		if strings.ToLower(client.Alias) == strings.ToLower(alias) {
+		if strings.EqualFold(client.Alias, alias) {
 			slaveIp = client.IP
 		}
 	}
