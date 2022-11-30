@@ -30,11 +30,12 @@ type ctxWoLParam struct{}
 var limiter = rate.NewLimiter(1, 1)
 
 // define limit middleware that checks limiter and also check decoded Params password
-func limit(next http.Handler) http.Handler {
+func LimitAndAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// check if request is allowed by limiter
 		if !limiter.Allow() {
-			log.Println("Too many requests")
+			// log too many requests and api path
+			log.Println(r.URL.Path, "Too many requests")
 			w.WriteHeader(http.StatusTooManyRequests)
 			w.Write([]byte("429 - Too Many Requests"))
 			return
@@ -44,14 +45,14 @@ func limit(next http.Handler) http.Handler {
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&params)
 		if err != nil {
-			log.Println("Error decoding JSON: ", err)
+			log.Println(r.URL.Path, "Error decoding JSON: ", err)
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("400 - Bad Request"))
 			return
 		}
 		paramApiHash := sha256.Sum256([]byte(params.APIKey))
 		if !bytes.Equal(paramApiHash[:], MyConfig.APIKeyHash[:]) {
-			log.Println("API Key doesn't match")
+			log.Println(r.URL.Path, "API Key doesn't match")
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte("401 - Unauthorized"))
 			return
@@ -79,7 +80,8 @@ func Setup() (config.Config, http.Handler, error) {
 	// handle OS query requests
 	mux.HandleFunc("/api/os", OSQueryHandler)
 
-	handler := limit(mux)
+	// handle all requests through LimitAndAuth middleware
+	handler := LimitAndAuth(mux)
 
 	return MyConfig, handler, err
 	//setup endpoints
