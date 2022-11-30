@@ -1,6 +1,7 @@
 package config
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -9,13 +10,14 @@ import (
 
 // The data struct to decode config.json
 type Config struct {
-	Master    bool   `json:"master"`
-	TLS       bool   `json:"tls"`
-	Port      string `json:"port"`
-	APIKey    string `json:"api_key"`
-	Fullchain string `json:"fullchain"`
-	PrivKey   string `json:"priv_key"`
-	Clients   []struct {
+	Master     bool   `json:"master"`
+	TLS        bool   `json:"tls"`
+	Port       string `json:"port"`
+	APIKey     string `json:"api_key"`
+	APIKeyHash [32]byte
+	Fullchain  string `json:"fullchain"`
+	PrivKey    string `json:"priv_key"`
+	Clients    []struct {
 		Alias string `json:"alias"`
 		IP    string `json:"ip"`
 		MAC   string `json:"mac"`
@@ -44,6 +46,7 @@ func ParseConfig() (Config, error) {
 		return Config{}, err
 	}
 	err = json.Unmarshal(content, &result)
+	result.APIKeyHash = sha256.Sum256([]byte(result.APIKey))
 	if err != nil {
 		return Config{}, err
 	}

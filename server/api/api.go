@@ -2,8 +2,9 @@ package api
 
 import (
 	"bytes"
+	"context"
+	"crypto/sha256"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -12,6 +13,8 @@ import (
 	"strings"
 	"wolwebservice/config"
 	"wolwebservice/util"
+
+	"golang.org/x/time/rate"
 )
 
 type Params struct {
@@ -22,7 +25,46 @@ type Params struct {
 
 var MyConfig config.Config
 
-func Setup() (config.Config, *http.ServeMux, error) {
+type ctxWoLParam struct{}
+
+var limiter = rate.NewLimiter(1, 1)
+
+// define limit middleware that checks limiter and also check decoded Params password
+func LimitAndAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// check if request is allowed by limiter
+		if !limiter.Allow() {
+			// log too many requests and api path
+			log.Println(r.URL.Path, "Too many requests")
+			w.WriteHeader(http.StatusTooManyRequests)
+			w.Write([]byte("429 - Too Many Requests"))
+			return
+		}
+		//check password
+		var params Params
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&params)
+		if err != nil {
+			log.Println(r.URL.Path, "Error decoding JSON: ", err)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("400 - Bad Request"))
+			return
+		}
+		paramApiHash := sha256.Sum256([]byte(params.APIKey))
+		if !bytes.Equal(paramApiHash[:], MyConfig.APIKeyHash[:]) {
+			log.Println(r.URL.Path, "API Key doesn't match")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("401 - Unauthorized"))
+			return
+		}
+		// add param to r context
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, ctxWoLParam{}, params)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func Setup() (config.Config, http.Handler, error) {
 	var err error
 	// parse config
 	MyConfig, err = config.ParseConfig()
@@ -38,7 +80,10 @@ func Setup() (config.Config, *http.ServeMux, error) {
 	// handle OS query requests
 	mux.HandleFunc("/api/os", OSQueryHandler)
 
-	return MyConfig, mux, err
+	// handle all requests through LimitAndAuth middleware
+	handler := LimitAndAuth(mux)
+
+	return MyConfig, handler, err
 	//setup endpoints
 }
 
@@ -174,27 +219,10 @@ func reboot(w http.ResponseWriter, params Params) {
 	w.Write([]byte("Rebooting computer to: " + params.Os))
 }
 
-/** Get parameters from request and check api_key **/
-func GetAuthParams(r *http.Request) (Params, error) {
-	var params Params
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&params)
-	if err != nil {
-		return Params{}, err
-	}
-	if params.APIKey != MyConfig.APIKey {
-		return Params{}, errors.New("APIKey from JSON doesn't match")
-	}
-	return params, nil
-}
-
 func WoLHandler(w http.ResponseWriter, r *http.Request) {
-	params, err := GetAuthParams(r)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400 - Bad Request"))
-		return
-	}
+	// get params from context
+	params := r.Context().Value(ctxWoLParam{}).(Params)
+
 	log.Println("Received WoL request for: ", params.Alias)
 	if params.Alias != "" {
 		//no os specified, send wol
@@ -204,16 +232,11 @@ func WoLHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("400 - Bad Request"))
 	}
-
 }
 
 func RestartHandler(w http.ResponseWriter, r *http.Request) {
-	params, err := GetAuthParams(r)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400 - Bad Request"))
-		return
-	}
+	// get params from context
+	params := r.Context().Value(ctxWoLParam{}).(Params)
 	if !MyConfig.Master {
 		reboot(w, params)
 	} else {
@@ -223,12 +246,8 @@ func RestartHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SuspendHandler(w http.ResponseWriter, r *http.Request) {
-	params, err := GetAuthParams(r)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400 - Bad Request"))
-		return
-	}
+	// get params from context
+	params := r.Context().Value(ctxWoLParam{}).(Params)
 	if !MyConfig.Master {
 		util.Suspend(w)
 	} else {
@@ -238,12 +257,8 @@ func SuspendHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func OSQueryHandler(w http.ResponseWriter, r *http.Request) {
-	params, err := GetAuthParams(r)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("400 - Bad Request"))
-		return
-	}
+	// get params from context
+	params := r.Context().Value(ctxWoLParam{}).(Params)
 	if !MyConfig.Master {
 		// If slave then process request
 		w.WriteHeader(http.StatusOK)
