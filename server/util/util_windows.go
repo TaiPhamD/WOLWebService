@@ -1,6 +1,8 @@
 package util
 
+// #cgo LDFLAGS: -L../../build/ -lutil_windows  -lpowrprof -lstdc++
 import (
+	"C"
 	"log"
 	"net/http"
 	"strconv"
@@ -11,10 +13,8 @@ import (
 
 func delaySuspend(n time.Duration) {
 	time.Sleep(n * time.Second)
-	loaddll := syscall.MustLoadDLL("efiDLL")
-	//defer loaddll.Release()
-	SystemSuspendFunc := loaddll.MustFindProc("SystemSuspend")
-	SystemSuspendFunc.Call()
+	// call C code to suspend
+	C.SystemSuspend()
 }
 
 func Suspend(w http.ResponseWriter) error {
@@ -27,33 +27,28 @@ func Suspend(w http.ResponseWriter) error {
 }
 
 func Reboot(bootnext string, w http.ResponseWriter) error {
-	// call DLL to change boot NEXT
+	// call C code to change UEFI boot order and reboot
 
 	var mode uint16
-	// Mode = 0 to change BootNext variable
-	mode = 0
+	mode = 0 // Mode = 0 to change BootNext variable
 	//decode bootnext to uint16
 	data, err := strconv.ParseInt(bootnext, 16, 16)
 	if err != nil {
 		log.Print(err)
+		w.writeHeader(http.StatusBadRequest)
 		return err
 	}
 
-	loaddll := syscall.MustLoadDLL("efiDLL")
-	//defer loaddll.Release()
-	ChangeBootFunc := loaddll.MustFindProc("SystemChangeBoot")
-	ChangeBootFunc.Call(uintptr(unsafe.Pointer(&data)), uintptr(unsafe.Pointer(&mode)))
+	c_mode := C.uint16_t(mode)
+	c_data := C.uint16_t(data)
+	// call C code to change bootnext
+	C.SystemChangeBoot(c_mode, c_data)
 
-	// write status ok to w
-	w.WriteHeader(http.StatusOK)
-	// call DLL command to reboot
-	// Mode = 0 is restart
-	mode = 0
-	ShutdownFunc := loaddll.MustFindProc("SystemShutdown")
-	ShutdownFunc.Call(uintptr(unsafe.Pointer(&mode)))
-	if err != nil {
-		log.Println("Error executing reboot command: ", err)
-		return err
-	}
+	// Call C code to reboot
+	w.writeHeader(http.StatusOK)
+	w.Write([]byte("System is rebooting"))
+	mode = 0 // Mode = 0 to reboot
+	cmode = C.uint16_t(mode)
+	C.SystemShutdown(cmode)
 	return nil
 }
