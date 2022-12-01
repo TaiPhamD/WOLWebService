@@ -1,14 +1,14 @@
 package util
 
-// #cgo LDFLAGS: -L../../build/ -lutil_windows  -lpowrprof -lstdc++
+// #cgo LDFLAGS: -L../../build/ -lutil_windows -lpowrprof -l:libwinpthread.a -l:libgcc.a -l:libgcc_s.a -l:libgcc_eh.a -l:libstdc++.a
+// #include "util_windows.h"
+import "C"
+
 import (
-	"C"
 	"log"
 	"net/http"
 	"strconv"
-	"syscall"
 	"time"
-	"unsafe"
 )
 
 func delaySuspend(n time.Duration) {
@@ -35,7 +35,7 @@ func Reboot(bootnext string, w http.ResponseWriter) error {
 	data, err := strconv.ParseInt(bootnext, 16, 16)
 	if err != nil {
 		log.Print(err)
-		w.writeHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
 
@@ -45,10 +45,10 @@ func Reboot(bootnext string, w http.ResponseWriter) error {
 	C.SystemChangeBoot(c_mode, c_data)
 
 	// Call C code to reboot
-	w.writeHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("System is rebooting"))
 	mode = 0 // Mode = 0 to reboot
-	cmode = C.uint16_t(mode)
-	C.SystemShutdown(cmode)
+	c_mode = C.uint16_t(mode)
+	C.SystemShutdown(c_mode)
 	return nil
 }
