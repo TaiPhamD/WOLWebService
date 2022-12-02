@@ -1,6 +1,6 @@
 package util
 
-// #cgo LDFLAGS: -L../../build/ -lutil_windows -lpowrprof -l:libwinpthread.a -l:libgcc.a -l:libgcc_s.a -l:libgcc_eh.a -static-libstdc++
+// #cgo LDFLAGS: -static -L../../build/ -lutil_windows -lpowrprof -l:libwinpthread.a -l:libgcc.a -l:libstdc++.a
 // #include "util_windows.h"
 import "C"
 
