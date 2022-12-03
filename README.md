@@ -64,10 +64,14 @@ Here is an example of a sirit shortcut:
 Master config
 ```
 {
+    "master": false,
+    "tls": false,
     "port": "9991", <--- Listening port of web appp server
+    "rate_limit": 1, <--- limit max api request per sec
+	"rate_burst": 1, <--- limit api request max burst rate
     "api_key": "my_secure_password", <--- Password to authorize api calls
-    "fullchain": "certs/fullchain.pem", <--- optional TLS certs for HTTPS hosting
-    "priv_key": "certs/privkey.pem",<--- optional TLS certs for HTTPS hosting
+    "fullchain": "path_to/certs/fullchain.pem", <--- optional TLS certs for HTTPS hosting
+    "priv_key": "path_to/certs/privkey.pem",<--- optional TLS certs for HTTPS hosting
     "clients:": [ <--- Add all PCs on your LAN that you want WOL control here
         {
             "alias": "client1", <--- alias used to select the right PC . aka mapping to IP/MAC info.
@@ -76,7 +80,7 @@ Master config
         },
         {
             "alias": "client2",
-            "ip": "192.168.0.27", <--- if no IP specified then it assumes the same IP as the master's config
+            "ip": "192.168.0.27", <--- if no port specified then it assumes the same port as the master's config
             "mac": "aa:aa:aa:aa:aa:aa" 
         }
     ]
@@ -92,6 +96,8 @@ Slave config
     "master": false,
     "tls": false,
     "port": "9991",
+    "rate_limit": 1, <--- limit max api request per sec
+	"rate_burst": 1, <--- limit api request max burst rate
     "api_key": "my_secret_key",
     "clients:": [
         {
