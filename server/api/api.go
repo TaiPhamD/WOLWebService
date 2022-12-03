@@ -203,14 +203,17 @@ func reboot(w http.ResponseWriter, params Params) {
 			}
 		}
 	}
-	if bootId == "" {
-		log.Println("alias from JSON doesn't match: " + params.Alias)
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404 - Not Found"))
-		return
+	// we couldn't find the bootId for the given params.Os
+	if len(params.Os) > 0 {
+		if bootId == "" {
+			log.Println("alias from JSON doesn't match: " + params.Alias)
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("404 - Not Found"))
+			return
+		} else {
+			log.Println("Found bootId for alias: " + params.Alias)
+		}
 	}
-
-	log.Println("Found bootId for alias: " + params.Alias + " and os: " + params.Os)
 	// do the actual restart and change BootNext based on bootId
 	err := util.Reboot(bootId, w)
 	if err != nil {
