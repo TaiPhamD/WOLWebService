@@ -27,7 +27,8 @@ var MyConfig config.Config
 
 type ctxWoLParam struct{}
 
-var limiter = rate.NewLimiter(1, 1)
+// var limiter = rate.NewLimiter(1, 1)
+var limiter *rate.Limiter
 
 // define limit middleware that checks limiter
 func Limit(next http.Handler) http.Handler {
@@ -76,6 +77,14 @@ func Setup() (config.Config, http.Handler, error) {
 	var err error
 	// parse config
 	MyConfig, err = config.ParseConfig()
+	if err != nil {
+		fmt.Println("Error parsing config.json: ", err)
+		log.Fatal("Error parsing config.json: ", err)
+	}
+	log.Println("Config parsed successfully")
+	log.Println("Rate limit: ", MyConfig.RateLimit)
+	log.Println("Rate burst: ", MyConfig.RateBurst)
+	limiter = rate.NewLimiter(rate.Limit(MyConfig.RateLimit), MyConfig.RateBurst)
 	mux := http.NewServeMux()
 	// handle WOL requests
 	if MyConfig.Master {
@@ -114,8 +123,16 @@ func forwardRequest(w http.ResponseWriter, r *http.Request, params Params) {
 		return
 	}
 
+	// assume slave port is the same as the config port
+	slavePort := MyConfig.Port
+	if strings.Contains(slaveIp, ":") {
+		// check if slaveIP contains :port
+		slaveIp = strings.Split(slaveIp, ":")[0]
+		slavePort = strings.Split(slaveIp, ":")[1]
+	}
+
 	// create a new url from the raw RequestURI sent by the client
-	url := fmt.Sprintf("%s://%s:%s%s", "http", slaveIp, MyConfig.Port, r.RequestURI)
+	url := fmt.Sprintf("%s://%s:%s%s", "http", slaveIp, slavePort, r.RequestURI)
 	log.Println("request URL: ", url)
 
 	//convert params to json
