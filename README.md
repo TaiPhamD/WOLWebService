@@ -53,7 +53,7 @@ Once you have the server setup you can easily send HTTPS payload to your server 
     - Note: Siri Shortcuts won't allow you to connect to a self-signed HTTPS so you should get a real HTTPS cert for free via [LetsEncrypt](https://letsencrypt.org)
     
 #### Example of Siri shortcut to send WoL payload    
-Here is an example of a sirit shortcut:
+Here is an example of a siri shortcut:
 
 <img width="713" alt="Screenshot 2022-11-28 at 6 46 23 PM" src="https://user-images.githubusercontent.com/10516699/204426683-538dd29b-d032-4128-a9a3-0e8bc9f00de6.png">
 
@@ -132,7 +132,8 @@ Slave config
 - Linux distro with systemd support. If you don't have it then you just have to modify the installation script yourself and edit 1 line for the suspend code [here](https://github.com/TaiPhamD/WOLWebService/blob/8137ca66b9ac6d4dea3cd1b5e4d359f3b6c33a92/server/util/util_linux.go#L12) to not rely on systemctl.
 - Go lang compiler 
 ### Build step
-- ./build_linix.sh
+- ./build_linux.sh
+   - tip if you need to cross compile set env GOOS=linux GOARCH=arm64 if you want to compile for an arm device like a raspberry pi
 ### Install step
 - ./install_linux.sh (It will install a systemd service named wolservice and start it but it wont work yet until you setup a config.json)
 - setup config.json based on the examples from [master config](https://github.com/TaiPhamD/WOLWebService/blob/master/config_sample_master.json)
