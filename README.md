@@ -64,7 +64,7 @@ Here is an example of a sirit shortcut:
 Master config
 ```
 {
-    "master": false,
+    "master": true,
     "tls": false,
     "port": "9991", <--- Listening port of web appp server
     "rate_limit": 1, <--- limit max api request per sec
