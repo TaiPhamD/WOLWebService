@@ -30,8 +30,7 @@ func Reboot(bootnext string, w http.ResponseWriter) error {
 	// call DLL to change boot NEXT
 
 	var mode uint16
-	// Mode = 0 to change BootNext variable
-	mode = 0
+	loaddll := syscall.MustLoadDLL("efiDLL")
 	if len(bootnext) > 0 {
 		//decode bootnext to uint16
 		data, err := strconv.ParseInt(bootnext, 16, 16)
@@ -39,7 +38,8 @@ func Reboot(bootnext string, w http.ResponseWriter) error {
 			log.Print(err)
 			return err
 		}
-		loaddll := syscall.MustLoadDLL("efiDLL")
+		// Mode = 0 to change BootNext variable
+		mode = 0
 		//defer loaddll.Release()
 		ChangeBootFunc := loaddll.MustFindProc("SystemChangeBoot")
 		ChangeBootFunc.Call(uintptr(unsafe.Pointer(&data)), uintptr(unsafe.Pointer(&mode)))
@@ -51,9 +51,5 @@ func Reboot(bootnext string, w http.ResponseWriter) error {
 	mode = 0
 	ShutdownFunc := loaddll.MustFindProc("SystemShutdown")
 	ShutdownFunc.Call(uintptr(unsafe.Pointer(&mode)))
-	if err != nil {
-		log.Println("Error executing reboot command: ", err)
-		return err
-	}
 	return nil
 }
