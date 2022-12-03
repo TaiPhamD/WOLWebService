@@ -14,7 +14,7 @@ If you don't have an always on device then you could install this service direct
 
 ## API
 
-These APIs were built with security in mind where it will make sure your api_key matches the server's config.json before it processes any API call. Your local PC client information is also secure since you are only sending alias information instead of an actual IP/MAC address of the desired client system. There is also an internal rate limiter that make sure you can't spam the APIs.
+These APIs were built with security in mind where it will make sure your api_key matches the server's config.json before it processes any API call. Your local PC client information is also secured since you are only sending alias information instead of an actual IP/MAC address of the desired client system. There is also an internal rate limiter that make sure you can't spam the APIs.
 
 - POST /api/wol   - This API sends a Wake-On-Lan packet to your client PC defined by the alias param. Only available in Master mode.
 ```
@@ -68,7 +68,7 @@ Master config
     "tls": false,
     "port": "9991", <--- Listening port of web appp server
     "rate_limit": 1, <--- limit max api request per sec
-	"rate_burst": 1, <--- limit api request max burst rate
+    "rate_burst": 1, <--- limit api request max burst rate
     "api_key": "my_secure_password", <--- Password to authorize api calls
     "fullchain": "path_to/certs/fullchain.pem", <--- optional TLS certs for HTTPS hosting
     "priv_key": "path_to/certs/privkey.pem",<--- optional TLS certs for HTTPS hosting
@@ -97,7 +97,7 @@ Slave config
     "tls": false,
     "port": "9991",
     "rate_limit": 1, <--- limit max api request per sec
-	"rate_burst": 1, <--- limit api request max burst rate
+    "rate_burst": 1, <--- limit api request max burst rate
     "api_key": "my_secret_key",
     "clients:": [
         {
