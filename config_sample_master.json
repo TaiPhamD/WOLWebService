@@ -2,6 +2,8 @@
     "master": true,
     "tls": true,
     "port": "9991",
+    "rate_limit": 1,
+	"rate_burst": 1,
     "api_key": "my_secret_key",
     "fullchain": "/etc/letsencrypt/live/mydomain.com/fullchain.pem",
     "priv_key": "/etc/letsencrypt/live/mydomain.com/privkey.pem",
@@ -9,32 +11,12 @@
         {
             "alias": "zen4",
             "ip": "192.168.2.3",
-            "mac": "a8:a8:a8:a8:a8:a8",
-            "os": [
-                {
-                    "name": "Windows",
-                    "boot_id": "0000"
-                },
-                {
-                    "name": "ubuntu",
-                    "boot_id": "0002"
-                }
-            ]
+            "mac": "a8:a8:a8:a8:a8:a8"
         },
         {
             "alias": "client2",
             "ip": "192.168.0.255",
-            "mac": "aa:aa:aa:aa:aa:aa",
-            "os": [
-                {
-                    "name": "Windows",
-                    "boot_id": "0000"
-                },
-                {
-                    "name": "ubuntu",
-                    "boot_id": "0002"
-                }
-            ]
+            "mac": "aa:aa:aa:aa:aa:aa"
         }
     ]
 }

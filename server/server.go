@@ -75,6 +75,17 @@ func setupLog() *os.File {
 		log.Fatal(errlog)
 	}
 	log.SetOutput(filelog)
+
+	// only keep the last 5 log files based on creation time
+	files, err := filepath.Glob(dir + "/logs/info_*.log")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(files) > 5 {
+		for _, file := range files[:len(files)-5] {
+			os.Remove(file)
+		}
+	}
 	return filelog
 }
 

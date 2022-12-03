@@ -29,11 +29,13 @@ func Suspend(w http.ResponseWriter) error {
 
 func Reboot(bootnext string, w http.ResponseWriter) error {
 	// call shell command to execute "efibootmgr --bootnext 0000" command
-	cmd := exec.Command("efibootmgr", "--bootnext", bootnext)
-	_, err := cmd.Output()
-	if err != nil {
-		log.Println("Error executing efibootmgr command: ", err)
-		return err
+	if len(bootnext) > 0 {
+		cmd := exec.Command("efibootmgr", "--bootnext", bootnext)
+		_, err := cmd.Output()
+		if err != nil {
+			log.Println("Error executing efibootmgr command: ", err)
+			return err
+		}
 	}
 	// write status ok to w
 	w.WriteHeader(http.StatusOK)
@@ -43,9 +45,9 @@ func Reboot(bootnext string, w http.ResponseWriter) error {
 	w.(http.Flusher).Flush()
 
 	// call shell command /usr/sbin/shutdown -t 15 -r
-	cmd = exec.Command("shutdown", "-t", "1", "-r")
+	cmd := exec.Command("shutdown", "-t", "1", "-r")
 	// cmd = exec.Command("reboot")
-	_, err = cmd.Output()
+	_, err := cmd.Output()
 	if err != nil {
 		log.Println("Error executing reboot command: ", err)
 		return err

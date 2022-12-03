@@ -13,6 +13,8 @@ type Config struct {
 	Master     bool   `json:"master"`
 	TLS        bool   `json:"tls"`
 	Port       string `json:"port"`
+	RateLimit  int    `json:"rate_limit"`
+	RateBurst  int    `json:"rate_burst"`
 	APIKey     string `json:"api_key"`
 	APIKeyHash [32]byte
 	Fullchain  string `json:"fullchain"`

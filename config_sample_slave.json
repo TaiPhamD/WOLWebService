@@ -2,6 +2,8 @@
     "master": false,
     "tls": false,
     "port": "9991",
+    "rate_limit": 1,
+	"rate_burst": 1,
     "api_key": "my_secret_key",
     "clients:": [
         {

@@ -1,19 +1,21 @@
 # WOLWebService
 ## summary
-This is a webservice that runs in 2 modes:
+This webservice could operate in two modes:
   - Master: This mode is meant for an always on device like a raspberry pi or a unix based router like the UDM PRO/SE
       - It could relay Wake-On-Lan commands to your PC to wake it up.
       - Query slave system to get current OS information
       - Reboot slave system and change its UEFI BootNext variable with the specified BootID
   - Slave: This mode is meant for the client computer that would fulfill restart requests or OS query
 
-A typical use case would be to install this server app on an always on device like a raspberry pi then set it up in Master mode. Then configure config.json to include information about all your LAN devices that you want to be able to send WoL packets, restart command, or query OS info.
+A typical use case would be to install this server app on an always on device like a raspberry pi/Linux router then set it up in Master mode. Then configure config.json to include information about all your LAN devices that you want to be able to send WoL packets, restart command, or query OS info. You do not need to install this software on the WoL targeted system unless you want to support other APIs like suspend or restarting to a different OS.
 
-You do not need to install this software on the WoL targeted system unless you want to support other APIs like suspend or restarting to a different OS.
-
+If you don't have an always on device then you could install this service directly on the computer and you would just lose out the WoL functionality. 
 
 
 ## API
+
+These APIs were built with security in mind where it will make sure your api_key matches the server's config.json before it processes any API call. Your local PC client information is also secure since you are only sending alias information instead of an actual IP/MAC address of the desired client system. There is also an internal rate limiter that make sure you can't spam the APIs.
+
 - POST /api/wol   - This API sends a Wake-On-Lan packet to your client PC defined by the alias param. Only available in Master mode.
 ```
 {
@@ -33,7 +35,7 @@ You do not need to install this software on the WoL targeted system unless you w
 {
 	"api_key": "4235sdfadf",
 	"alias": "pc1",
-        "os": "ubuntu"
+        "os": "ubuntu" <---Optional parameter. If no OS is specified then it will restart without changing the UEFI BootNext variable.
 }
 ```
 - POST /api/suspend   - This API suspends the client PC 
@@ -62,19 +64,23 @@ Here is an example of a sirit shortcut:
 Master config
 ```
 {
+    "master": false,
+    "tls": false,
     "port": "9991", <--- Listening port of web appp server
+    "rate_limit": 1, <--- limit max api request per sec
+	"rate_burst": 1, <--- limit api request max burst rate
     "api_key": "my_secure_password", <--- Password to authorize api calls
-    "fullchain": "certs/fullchain.pem", <--- optional TLS certs for HTTPS hosting
-    "priv_key": "certs/privkey.pem",<--- optional TLS certs for HTTPS hosting
+    "fullchain": "path_to/certs/fullchain.pem", <--- optional TLS certs for HTTPS hosting
+    "priv_key": "path_to/certs/privkey.pem",<--- optional TLS certs for HTTPS hosting
     "clients:": [ <--- Add all PCs on your LAN that you want WOL control here
         {
             "alias": "client1", <--- alias used to select the right PC . aka mapping to IP/MAC info.
-            "ip": "192.168.2.23",
+            "ip": "192.168.2.23:9991",
             "mac": "00:00:00:00:00:00"
         },
         {
             "alias": "client2",
-            "ip": "192.168.0.27",
+            "ip": "192.168.0.27", <--- if no port specified then it assumes the same port as the master's config
             "mac": "aa:aa:aa:aa:aa:aa" 
         }
     ]
@@ -89,7 +95,9 @@ Slave config
 {
     "master": false,
     "tls": false,
-    "port": "9991", <---listening port must match master system port
+    "port": "9991",
+    "rate_limit": 1, <--- limit max api request per sec
+	"rate_burst": 1, <--- limit api request max burst rate
     "api_key": "my_secret_key",
     "clients:": [
         {
@@ -124,7 +132,7 @@ Slave config
 - Linux distro with systemd support. If you don't have it then you just have to modify the installation script yourself and edit 1 line for the suspend code [here](https://github.com/TaiPhamD/WOLWebService/blob/8137ca66b9ac6d4dea3cd1b5e4d359f3b6c33a92/server/util/util_linux.go#L12) to not rely on systemctl.
 - Go lang compiler 
 ### Build step
-- ./build_unix.sh
+- ./build_linix.sh
 ### Install step
 - ./install_linux.sh (It will install a systemd service named wolservice and start it but it wont work yet until you setup a config.json)
 - setup config.json based on the examples from [master config](https://github.com/TaiPhamD/WOLWebService/blob/master/config_sample_master.json)
