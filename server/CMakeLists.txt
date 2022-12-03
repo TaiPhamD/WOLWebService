@@ -12,7 +12,8 @@ add_custom_command(OUTPUT golang_wolwebservice_build.out
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMAND go mod download
         COMMAND ${CMAKE_COMMAND} -E echo "Compiling Golang wolwebservice project"
-        COMMAND go build -o ${OUTPUT}   
+        # strip debug symbols
+        COMMAND go build -ldflags="-w" -o ${OUTPUT}
 )
 
 add_custom_target(wolwebservice ALL
