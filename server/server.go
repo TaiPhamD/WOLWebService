@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"log"
 	"net/http"
 	"os"
@@ -41,7 +42,24 @@ func (p *program) run() {
 	} else {
 		log.Print("tls chain path: ", MyConfig.Fullchain)
 		log.Print("tls key path: ", MyConfig.PrivKey)
-		err = http.ListenAndServeTLS(":"+MyConfig.Port, MyConfig.Fullchain, MyConfig.PrivKey, handler)
+
+		var tlsConfig = &tls.Config{
+			// Disable SSLv2, SSLv3, and TLS 1.0
+			MinVersion: tls.VersionTLS12,
+			// Choose the preferred cipher suites
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				// Add more cipher suites if necessary
+			},
+		}
+		server := &http.Server{
+			Addr:         ":" + MyConfig.Port,
+			Handler:      handler,
+			TLSConfig:    tlsConfig,
+			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)), // Disable HTTP/2 for demo purposes
+		}
+		err = server.ListenAndServeTLS(MyConfig.Fullchain, MyConfig.PrivKey)
 	}
 	if err != nil {
 		log.Fatal("Error starting web server: ", err)
