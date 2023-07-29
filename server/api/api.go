@@ -194,7 +194,7 @@ func sendWol(w http.ResponseWriter, params Params) {
 
 	if err == nil {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Waking up" + params.Alias))
+		w.Write([]byte("Waking up " + params.Alias))
 
 	} else {
 		log.Println("Error creating magic packet: ", err)
